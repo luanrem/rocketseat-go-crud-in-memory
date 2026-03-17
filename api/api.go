@@ -2,12 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 )
 
 func NewHandler(db map[string]User) http.Handler {
@@ -62,6 +62,9 @@ func handleCreateUser(db map[string]User) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(body.Email, body.Name)
+		id := uuid.New().String()
+		db[id] = User(body)
+
+		sendJSON(w, Response{Data: db[id]}, http.StatusCreated)
 	}
 }
