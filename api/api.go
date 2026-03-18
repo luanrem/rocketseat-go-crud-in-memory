@@ -20,6 +20,8 @@ func NewHandler(db map[string]User) http.Handler {
 	r.Post("/users", handleCreateUser(db))
 	r.Get("/users", handleGetUsers(db))
 	r.Get("/users/{id}", handleGetUserByID(db))
+	r.Delete("/users/{id}", handleDeleteUser(db))
+	r.Put("/users/{id}", handleUpdateUser(db))
 
 	return r
 }
@@ -88,5 +90,43 @@ func handleGetUserByID(db map[string]User) http.HandlerFunc {
 		}
 
 		sendJSON(w, Response{Data: user}, http.StatusOK)
+	}
+}
+
+func handleDeleteUser(db map[string]User) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		_, ok := db[id]
+		if !ok {
+			sendJSON(w, Response{Error: "user not found"}, http.StatusNotFound)
+			return
+		}
+
+		delete(db, id)
+
+		sendJSON(w, Response{Data: "user deleted"}, http.StatusOK)
+	}
+}
+
+func handleUpdateUser(db map[string]User) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		_, ok := db[id]
+		if !ok {
+			sendJSON(w, Response{Error: "user not found"}, http.StatusNotFound)
+			return
+		}
+
+		var body PostBody
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			sendJSON(w, Response{Error: "invalid body"}, http.StatusUnprocessableEntity)
+			return
+		}
+
+		db[id] = User(body)
+
+		sendJSON(w, Response{Data: db[id]}, http.StatusOK)
 	}
 }
