@@ -18,13 +18,14 @@ func NewHandler(db map[string]User) http.Handler {
 	r.Use(middleware.Logger)
 
 	r.Post("/users", handleCreateUser(db))
+	r.Get("/users", handleGetUsers(db))
 
 	return r
 }
 
 type User struct {
-	Name  string
-	Email string
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 type Response struct {
@@ -66,5 +67,11 @@ func handleCreateUser(db map[string]User) http.HandlerFunc {
 		db[id] = User(body)
 
 		sendJSON(w, Response{Data: db[id]}, http.StatusCreated)
+	}
+}
+
+func handleGetUsers(db map[string]User) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sendJSON(w, Response{Data: db}, http.StatusOK)
 	}
 }
