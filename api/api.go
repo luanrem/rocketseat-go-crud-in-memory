@@ -19,6 +19,7 @@ func NewHandler(db map[string]User) http.Handler {
 
 	r.Post("/users", handleCreateUser(db))
 	r.Get("/users", handleGetUsers(db))
+	r.Get("/users/{id}", handleGetUserByID(db))
 
 	return r
 }
@@ -73,5 +74,19 @@ func handleCreateUser(db map[string]User) http.HandlerFunc {
 func handleGetUsers(db map[string]User) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sendJSON(w, Response{Data: db}, http.StatusOK)
+	}
+}
+
+func handleGetUserByID(db map[string]User) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		user, ok := db[id]
+		if !ok {
+			sendJSON(w, Response{Error: "user not found"}, http.StatusNotFound)
+			return
+		}
+
+		sendJSON(w, Response{Data: user}, http.StatusOK)
 	}
 }
